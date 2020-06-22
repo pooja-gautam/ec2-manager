@@ -10,4 +10,8 @@ for eg: ```aws configure --profile {profile name}```
 or add the profile's configs to your aws credentials file.
 
 # Running script
-```pipenv run python src/manager.py```
+```pipenv run python src/manager.py <command> <--project=PROJECT>```
+
+*command* is start, stop, list
+*project* is optional
+
