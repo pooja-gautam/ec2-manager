@@ -5,6 +5,7 @@
 
 import boto3
 import click
+import botocore
 
 session = boto3.Session(profile_name='aws_practice')
 ec2 = session.resource('ec2')
@@ -100,7 +101,11 @@ def start_instances(project):
     instances = get_instances(project)
     for i in instances:
         print("Starting instances..")
-        i.start()
+        try:
+            i.start()
+        except botocore.exceptions.clienterror() as e:
+            print(f"Could not start {i.id}, ran into trouble: {e}")
+            continue
 
 
 @instances.command('stop')
@@ -110,7 +115,11 @@ def stop_instances(project):
     instances = get_instances(project)
     for i in instances:
         print("Stopping instances..")
-        i.stop()
+        try:
+            i.stop()
+        except botocore.exceptions.clienterror() as e:
+            print(f"Could not stop {i.id}, ran into trouble: {e}")
+            continue
 
 
 if __name__ == '__main__':

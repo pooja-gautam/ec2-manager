@@ -12,6 +12,6 @@ or add the profile's configs to your aws credentials file.
 # Running script
 ```pipenv run python src/manager.py <command> <--project=PROJECT>```
 
-*command* is start, stop, list
+*command* is start, stop, list, snapshots
 *project* is optional
 
