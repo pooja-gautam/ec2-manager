@@ -16,9 +16,68 @@ def get_instances(project=None):
         return ec2.instances.filter(Filters=filters)
     return ec2.instances.all()
 
+
 @click.group()
+def cli():
+    """ Manages instances and snapshots """
+
+
+@cli.group('instances')
 def instances():
     """ Returns all instances """
+
+
+@cli.group('volumes')
+def volumes():
+    """ Manages all volumes """
+
+
+@cli.group('snapshots')
+def snapshots():
+    """ Manages snapshots """
+
+
+@snapshots.command('list')
+@click.option('--project', default=None,
+              help='Only snapshots for project (tag Project:<name>)')
+def list_snapshots(project):
+    """ List EC2 volume snapshots """
+    instances = get_instances(project)
+    for i in instances:
+        for v in i.volumes.all():
+            for s in v.snapshots.all():
+                print(", ".join((s.id, v.id, i.id, s.state, s.progress, s.start_time.stfrtime("%c"))))
+    return
+
+
+@snapshots.command('create')
+@click.option('--project', default=None,
+              help='Only snapshots for project (tag Project:<name>)')
+def create_snapshots(project):
+    """ List EC2 volume snapshots """
+    instances = get_instances(project)
+    for i in instances:
+        for v in i.volumes.all():
+            if i.state['Name'] != 'Stopped':
+                print(f'Stopping instance {i.id} before creating snapshot')
+                i.stop()
+                i.wait_until_stopped()
+            print(f'Creating snapshot of volume {v.id}')
+            v.create_snapshot(Description=' Created by Ec2-manager ')
+            i.start()
+    print("Job's done!")
+    return
+
+
+@volumes.command('list')
+@click.option('--project', default=None,
+              help='Only volumes for project (tag Project:<name>)')
+def list_volumes(project):
+    """ List EC2 volumes """
+    instances = get_instances(project)
+    for i in instances:
+        for v in i.volumes.all():
+            print(", ".join((v.id, i.id, v.state, str(v.size) + "GiB", v.encrypted and "Encrypted" or "Not Encrypted")))
 
 
 @instances.command('list')
@@ -55,4 +114,4 @@ def stop_instances(project):
 
 
 if __name__ == '__main__':
-    instances()
+    cli()
