@@ -18,6 +18,11 @@ def get_instances(project=None):
     return ec2.instances.all()
 
 
+def has_pending_snapshots(volume):
+    snapshots = list(volume.snapshots.all())
+    return snapshots and snapshots[0].state == 'pending'
+
+
 @click.group()
 def cli():
     """ Manages instances and snapshots """
@@ -41,13 +46,17 @@ def snapshots():
 @snapshots.command('list')
 @click.option('--project', default=None,
               help='Only snapshots for project (tag Project:<name>)')
-def list_snapshots(project):
+@click.option('--list_all', default=False,
+              help='Show all snapshots')
+def list_snapshots(project, list_all):
     """ List EC2 volume snapshots """
     instances = get_instances(project)
     for i in instances:
         for v in i.volumes.all():
             for s in v.snapshots.all():
                 print(", ".join((s.id, v.id, i.id, s.state, s.progress, s.start_time.stfrtime("%c"))))
+                if s.state == 'completed' and not list_all: break
+
     return
 
 
@@ -64,6 +73,8 @@ def create_snapshots(project):
                 i.stop()
                 i.wait_until_stopped()
             print(f'Creating snapshot of volume {v.id}')
+            if has_pending_snapshots:
+                print('Snapshot already in progress. Skipping..')
             v.create_snapshot(Description=' Created by Ec2-manager ')
             i.start()
     print("Job's done!")
@@ -120,7 +131,6 @@ def stop_instances(project):
         except botocore.exceptions.clienterror() as e:
             print(f"Could not stop {i.id}, ran into trouble: {e}")
             continue
-
 
 if __name__ == '__main__':
     cli()
