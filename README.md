@@ -17,4 +17,11 @@ or add the profile's configs to your aws credentials file.
 
 Run with --help to get help for each command. 
 
+## Installing
 
+To install this tool, run ```python setup.py install```
+
+To generate a wheel, ```python setup.py bdist_wheel```
+Install the generated wheel using pip.
+
+Run with: ```ec2_snapshots <command> <project>```
